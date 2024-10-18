@@ -19,37 +19,13 @@ class Price {
     checkOverflow_(val);
   }
 
-  Price(std::string_view s) {
-    auto dot = s.find('.');
-    if (dot == std::string_view::npos) {
-      throw std::invalid_argument("No decimal point in the price");
-    }
-    if (dot > 7) {
-      throw std::invalid_argument("Integral part of the price is too big");
-    }
-    if (s.size() - dot - 1 != 5) {
-      throw std::invalid_argument("Decimal part of the price is too big");
-    }
+  static auto fromString(std::string_view s, Price &p) -> bool;
 
-    auto integral = std::stoll(std::string(s.substr(0, dot)));
-    auto decimal = std::stoll(std::string(s.substr(dot + 1)));
-
-    if (integral < 0 || decimal < 0) {
-      throw std::invalid_argument("Negative price");
+  explicit Price(std::string_view s) {
+    if (!Price::fromString(s, *this)) {
+      throw std::invalid_argument("Invalid price format");
     }
-
-    if (decimal >= MAX_DECIMAL) {
-      throw std::invalid_argument("Decimal part of the price is too big");
-    }
-
-    if (integral >= MAX_INTEGRAL) {
-      throw std::invalid_argument("Integral part of the price is too big");
-    }
-
-    _val = integral * MAX_DECIMAL + decimal;
   }
-
-  friend auto operator+(Price const & lhs, Price const & rhs) -> Price;
 
   auto operator==(Price const & other) const -> bool  {
     return _val == other._val;
@@ -59,10 +35,19 @@ class Price {
     return _val < other._val;
   }
 
+  auto operator>=(Price const & other) const -> bool  {
+    return _val >= other._val;
+  }
+
+  auto operator<=(Price const & other) const -> bool  {
+    return _val <= other._val;
+  }
+
   auto operator!=(Price const & other) const -> bool  {
     return !(*this == other);
   }
 
+  friend auto operator+(Price const & lhs, Price const & rhs) -> Price;
   friend std::ostream& operator<<(std::ostream& os, const Price& price);
 
 private:
@@ -82,4 +67,35 @@ auto operator+(Price const & lhs, Price const & rhs) -> Price {
 std::ostream& operator<<(std::ostream& os, const Price& price) {
   os << price._val / Price::MAX_DECIMAL << "." << price._val % Price::MAX_DECIMAL;
   return os;
+}
+
+bool Price::fromString(std::string_view s, Price & p) {
+  auto dot = s.find('.');
+  if (dot == std::string_view::npos) {
+    return false;
+  }
+  if (dot > 7) {
+    return false;
+  }
+  if (s.size() - dot - 1 != 5) {
+    return false;
+  }
+
+  auto integral = std::stoll(std::string(s.substr(0, dot)));
+  auto decimal = std::stoll(std::string(s.substr(dot + 1)));
+
+  if (integral < 0 || decimal < 0) {
+    return false;
+  }
+
+  if (decimal >= Price::MAX_DECIMAL) {
+    return false;
+  }
+
+  if (integral >= Price::MAX_INTEGRAL) {
+    return false;
+  }
+
+  p._val = integral * Price::MAX_DECIMAL + decimal;
+  return true;
 }
