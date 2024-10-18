@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include "../Price.hpp"
-#include "../SymbolBook.hpp"
+#include "../OrderBook.hpp"
 
 using namespace hft;
 
@@ -38,13 +38,12 @@ auto test_price() -> bool {
   return true;
 }
 
-auto test_symbol_book() -> bool {
+auto test_order_book() -> bool {
     // "O 10000 IBM B 10 100.00000"            | results.size() == 0
     // "O 10001 IBM B 10 99.00000"             | results.size() == 0
     // "O 10002 IBM S 5 101.00000"             | results.size() == 0
     // "O 10003 IBM S 5 100.00000"             | results.size() == 2
-  std::cout << "testing the book" << std::endl;
-  SymbolBook book;
+  OrderBook book;
   std::vector<Result> results;
   book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
   CHECK_EMPTY(results);
@@ -68,7 +67,28 @@ auto test_symbol_book() -> bool {
   CHECK_EQUAL(results[0].order_id, 10002);
   CHECK_EQUAL(results[0].type, ResultType::Error);
 
+  return true;
+}
 
+auto test_cancellation() -> bool {
+  OrderBook book;
+  std::vector<Result> results;
+  book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
+  book.add(SymbolOrder(10001, Side::Buy, 10, Price("99.00000")), results);
+
+  {
+    std::vector<Result> results;
+    book.cancel(10000, results);
+    CHECK_EQUAL(results.size(), 1);
+    CHECK_EQUAL(results[0].type, ResultType::CancelConfirm);
+  }
+
+  {
+    std::vector<Result> results;
+    book.cancel(666, results);
+    CHECK_EQUAL(results.size(), 1);
+    CHECK_EQUAL(results[0].type, ResultType::Error);
+  }
   return true;
 }
 
@@ -85,7 +105,8 @@ void run_test(F f, std::string const & name) {
 auto main(int , char *[]) -> int {
 
   run_test(test_price, "Price");
-  run_test(test_symbol_book, "Symbol book");
+  run_test(test_order_book, "Symbol book");
+  run_test(test_cancellation, "Symbol book cancel");
 
   // std::cout << std::numeric_limits<uint64_t>::max() << std::endl;
   // std::cout << std::numeric_limits<int64_t>::max() << std::endl;

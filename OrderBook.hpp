@@ -4,12 +4,12 @@
 
 namespace hft {
 
-class SymbolBook {
+class OrderBook {
   std::map<Price,std::vector<SymbolOrder>> _buy;
   std::map<Price,std::vector<SymbolOrder>> _sell;
 
  public:
-  SymbolBook() = default;
+  OrderBook() = default;
 
   int add(SymbolOrder const & order, std::vector<Result> & results);
   int cancel(OrderID id, std::vector<Result> & results);
@@ -20,7 +20,7 @@ class SymbolBook {
   int tryFill_(std::vector<Result> & results);
 };
 
-bool SymbolBook::contains(OrderID id) const
+bool OrderBook::contains(OrderID id) const
 {
   for (auto & container : {_buy, _sell}) {
     for (auto it = container.begin(); it != container.end(); ++it) {
@@ -34,9 +34,7 @@ bool SymbolBook::contains(OrderID id) const
   return false;
 }
 
-
-int SymbolBook::add(SymbolOrder const & order, std::vector<Result> & results) {
-  std::cout << "add " << order << std::endl;
+int OrderBook::add(SymbolOrder const & order, std::vector<Result> & results) {
   if (contains(order.id)) {
     results.emplace_back(Result::Error(order.id, "Duplicate order id"));
   }
@@ -49,9 +47,9 @@ int SymbolBook::add(SymbolOrder const & order, std::vector<Result> & results) {
   return tryFill_(results);
 }
 
-int SymbolBook::tryFill_([[maybe_unused]]std::vector<Result> & results)
+int OrderBook::tryFill_(std::vector<Result> & results)
 {
-  size_t old_size = results.size();
+  size_t const old_size = results.size();
   while (!_sell.empty() && !_buy.empty() && _sell.begin()->first <= _buy.rbegin()->first) {
     auto vector_sells = _sell.begin()->second;
     auto & sell = _sell.begin()->second.front();
@@ -79,6 +77,21 @@ int SymbolBook::tryFill_([[maybe_unused]]std::vector<Result> & results)
     }
   }
   return results.size() - old_size;
+}
+
+int OrderBook::cancel(OrderID id, std::vector<Result> & results) {
+  for (auto & container : {_buy, _sell}) {
+    for (auto it = container.begin(); it != container.end(); ++it) {
+      for (auto & order : it->second) {
+        if (order.id == id) {
+          results.emplace_back(Result::CancelConfirm(id));
+          return 1;
+        }
+      }
+    }
+  }
+  results.emplace_back(Result::Error(id, "Order does not exist"));
+  return 1;
 }
 
 }  // end namespace hft

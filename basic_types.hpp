@@ -46,8 +46,6 @@ struct Order
   SymbolOrder payload;
 };
 
-
-
 struct Action
 {
   ActionType type;
@@ -93,6 +91,10 @@ struct Result
   static Result FillConfirm(OrderID id, Quantity q, Price price)
   {
     return {ResultType::FillConfirm, id, q, price, ""};
+  }
+  static Result CancelConfirm(OrderID id)
+  {
+    return {ResultType::CancelConfirm, id, 0, Price(0), ""};
   }
   static Result Error(OrderID id, std::string const & error_message)
   {
