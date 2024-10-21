@@ -49,6 +49,7 @@ class Price {
 
   friend auto operator+(Price const & lhs, Price const & rhs) -> Price;
   friend std::ostream& operator<<(std::ostream& os, const Price& price);
+  friend std::istream& operator>>(std::istream& os, Price& price);
 
 private:
   auto checkOverflow_(int64_t val) const ->void {
@@ -66,6 +67,12 @@ auto operator+(Price const & lhs, Price const & rhs) -> Price {
 
 std::ostream& operator<<(std::ostream& os, const Price& price) {
   os << price._val / Price::MAX_DECIMAL << "." << price._val % Price::MAX_DECIMAL;
+  return os;
+}
+std::istream& operator>>(std::istream& os, Price& price) {
+  std::string s;
+  os >> s;
+  Price::fromString(s, price);
   return os;
 }
 

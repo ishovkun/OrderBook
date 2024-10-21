@@ -6,15 +6,8 @@
 namespace hft {
 
 using OrderID = uint32_t;
-using Symbol = std::array<char, 8>;
+using Symbol = char[8];
 using Quantity = uint16_t;
-
-enum class ActionType
-{
-  Place,
-  Cancel,
-  Print,
-};
 
 enum class Side : char { Buy = 'B', Sell = 'S' };
 
@@ -22,6 +15,10 @@ std::ostream& operator<<(std::ostream& os, const Side& s) {
   os << static_cast<char>(s);
   return os;
 }
+
+// std::string make_string(const Symbol& s) {
+//   return std::string(s.begin(), s.end());
+// }
 
 struct SymbolOrder
 {
@@ -33,6 +30,7 @@ struct SymbolOrder
   SymbolOrder(OrderID id, Side side, Quantity quantity, Price price)
       : id(id), side(side), quantity(quantity), price(price)
   {}
+  SymbolOrder() = default;
 };
 
 std::ostream& operator<<(std::ostream& os, const SymbolOrder& o) {
@@ -44,13 +42,10 @@ struct Order
 {
   Symbol symbol;
   SymbolOrder payload;
-};
-
-struct Action
-{
-  ActionType type;
-  OrderID id;
-  std::unique_ptr<Order> order{nullptr};
+  Order()
+  {
+    std::fill(symbol, symbol+sizeof(Symbol), 0);
+  }
 };
 
 enum class ResultType

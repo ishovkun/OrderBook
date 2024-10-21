@@ -2,6 +2,7 @@
 #include <iomanip>
 #include "../Price.hpp"
 #include "../OrderBook.hpp"
+#include "../Action.hpp"
 
 using namespace hft;
 
@@ -92,6 +93,59 @@ auto test_cancellation() -> bool {
   return true;
 }
 
+auto test_action() -> bool {
+  {
+    try {
+      std::string action_str = "O 10000 IBM B 10 100.00000 ";
+      Action action(action_str);
+      CHECK_EQUAL(action.type, ActionType::Place);
+      CHECK_EQUAL(action.order.payload.id, 10000);
+      CHECK_EQUAL(action.order.payload.quantity, 10);
+      CHECK_EQUAL(std::string(action.order.symbol), "IBM");
+    }
+    catch (std::invalid_argument const & e) {
+      std::cout << "Should not have thrown: " << e.what() << std::endl;
+      return false;
+    }
+  }
+  {
+    try {
+      std::string action_str = "O 10000 IBM B 10 100.00000 beer";
+      Action action(action_str);
+      return false;
+    }
+    catch (std::invalid_argument const & e) {
+      // expected
+    }
+  }
+  {
+    std::string action_str = "X 10002";
+    Action action(action_str);
+    CHECK_EQUAL(action.type, ActionType::Cancel);
+
+    try {
+      std::string action_str = "X 10002 2198";
+      Action action(action_str);
+    } catch (std::invalid_argument const & e) {
+      // expected
+    }
+  }
+
+  {
+    std::string action_str = "P";
+    Action action(action_str);
+    CHECK_EQUAL(action.type, ActionType::Print);
+
+    try {
+      std::string action_str = "125 P 13";
+      Action action(action_str);
+    } catch (std::invalid_argument const & e) {
+      // expected
+    }
+  }
+  return true;
+}
+
 template <typename F>
 void run_test(F f, std::string const & name) {
   if (!f()) {
@@ -107,6 +161,7 @@ auto main(int , char *[]) -> int {
   run_test(test_price, "Price");
   run_test(test_order_book, "Symbol book");
   run_test(test_cancellation, "Symbol book cancel");
+  run_test(test_action, "Action");
 
   // std::cout << std::numeric_limits<uint64_t>::max() << std::endl;
   // std::cout << std::numeric_limits<int64_t>::max() << std::endl;
