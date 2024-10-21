@@ -1,12 +1,12 @@
 #pragma once
 #include <array>
-#include "Price.hpp"
 #include "memory"
+#include "Price.hpp"
+#include "Symbol.hpp"
 
 namespace hft {
 
 using OrderID = uint32_t;
-using Symbol = char[8];
 using Quantity = uint16_t;
 
 enum class Side : char { Buy = 'B', Sell = 'S' };
@@ -15,10 +15,6 @@ std::ostream& operator<<(std::ostream& os, const Side& s) {
   os << static_cast<char>(s);
   return os;
 }
-
-// std::string make_string(const Symbol& s) {
-//   return std::string(s.begin(), s.end());
-// }
 
 struct SymbolOrder
 {
@@ -42,10 +38,6 @@ struct Order
 {
   Symbol symbol;
   SymbolOrder payload;
-  Order()
-  {
-    std::fill(symbol, symbol+sizeof(Symbol), 0);
-  }
 };
 
 enum class ResultType
