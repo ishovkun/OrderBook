@@ -97,6 +97,7 @@ RESULT OID [SYMBOL [SIDE] (FILL_QTY | OPEN_QTY) (FILL_PX | ORD_PX)]
     |                              | results[3] == "F 10008 IBM 3 102.00000"    |
 
 So, for the example actions.txt, the desired output from the application with the below main is:
+#+BEGIN_SRC Results
 F 10003 IBM 5 100.00000
 F 10000 IBM 5 100.00000
 F 10004 IBM 5 100.00000
@@ -113,4 +114,4 @@ F 10010 IBM 10 101.00000
 F 10007 IBM 10 101.00000
 F 10010 IBM 3 102.00000
 F 10008 IBM 3 102.00000
-
+#+END_SRC
