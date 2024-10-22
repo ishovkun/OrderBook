@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <filesystem>
 #include "MultiSymbolBook.hpp"
 #include "Action.hpp"
 
@@ -48,11 +49,20 @@ public:
   }
 };
 
-int main()
+
+auto main(int argc, char *argv[]) -> int
 {
+  std::string file_name{"actions.txt"};
+  if (argc > 1) {
+    file_name = argv[1];
+  }
+  if (!std::filesystem::exists(file_name)) {
+    std::cerr << "File '" << file_name << "'" << " does not exist" << std::endl;
+  }
+
   App app;
   std::string line;
-  std::ifstream actions("actions.txt", std::ios::in);
+  std::ifstream actions(file_name, std::ios::in);
   while (std::getline(actions, line)) {
     if (line.empty()) continue;
 
@@ -63,6 +73,6 @@ int main()
       std::cout << *it << std::endl;
     }
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 

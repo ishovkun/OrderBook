@@ -1,6 +1,6 @@
-#+title: SimpleCross
+#+title: OrderBook
 
-SimpleCross - a process that matches internal orders
+OrderBook - a process that matches internal orders
 
 * Overview:
   + Accept/remove orders as they are entered and keep a book of resting orders
