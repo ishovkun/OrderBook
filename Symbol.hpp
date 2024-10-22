@@ -14,6 +14,16 @@ class Symbol {
     std::fill(_data.begin(), _data.end(), 0);
   }
 
+  Symbol(Symbol const & other) {
+    _data = other._data;
+    _view = std::string_view(_data.data());
+  }
+  auto operator=(Symbol const & other) -> Symbol& {
+    _data = other._data;
+    _view = std::string_view(_data.data());
+    return *this;
+  }
+
   Symbol(const char* str) {
     std::fill(_data.begin(), _data.end(), 0);
     auto view = std::string_view(str);
@@ -30,6 +40,11 @@ class Symbol {
   auto operator==(const Symbol & other) const {
     return _data == other._data;
   }
+  // auto operator=(const Symbol & other) -> Symbol& {
+  //   _data = other._data;
+  //   _view = std::string_view(_data.data());
+  //   return *this;
+  // }
   std::string_view view() const { return _view; }
 
  private:

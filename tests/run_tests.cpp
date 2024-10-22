@@ -204,11 +204,5 @@ auto main(int , char *[]) -> int {
   run_test(test_action, "Action");
   run_test(test_multi_symbol_book, "Multi symbol book");
 
-  // std::cout << std::numeric_limits<uint64_t>::max() << std::endl;
-  // std::cout << std::numeric_limits<int64_t>::max() << std::endl;
-  // std::cout << std::numeric_limits<int64_t>::max() / double(1e12) << std::endl;
-  // std::cout << std::numeric_limits<int64_t>::max() / double(1e12) << std::endl;
-
-
   return 0;
 }

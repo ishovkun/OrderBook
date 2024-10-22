@@ -17,7 +17,7 @@ class MultiSymbolBook {
   void add(Order const &order) {
     _results.clear();
     if (_orders.count(order.id)) {
-      _results.emplace_back(Result::Error(order.id, "Order already exists"));
+      _results.emplace_back(Result::Error(order.id, "Duplicate order id"));
       return;
     }
     _orders[order.id] = order;
@@ -28,6 +28,7 @@ class MultiSymbolBook {
 
     for (auto const & result : _results) {
       if (result.type == ResultType::FillConfirm && _orders[result.order_id].quantity == 0) {
+        // std::cout << "erasing order " << result.order_id << std::endl;
         _orders.erase(result.order_id);
       }
     }

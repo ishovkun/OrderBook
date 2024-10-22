@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <iomanip>
 
 // (7.5 format means up to 7 digits before the decimal
 // and exactly 5 digits after the decimal)
@@ -73,7 +74,7 @@ auto operator-(Price const & lhs, Price const & rhs) -> Price {
 }
 
 std::ostream& operator<<(std::ostream& os, const Price& price) {
-  os << price._val / Price::MAX_DECIMAL << "." << price._val % Price::MAX_DECIMAL;
+  os << price._val / Price::MAX_DECIMAL << "." << std::setw(5) << std::setfill('0') << (price._val % Price::MAX_DECIMAL);
   return os;
 }
 std::istream& operator>>(std::istream& os, Price& price) {

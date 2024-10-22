@@ -82,7 +82,6 @@ auto OrderMatcher::tryFill_(std::vector<Result> & results) -> void
     auto & buy = _orders[vector_buys.front()];
 
     Quantity fill_quantity = std::min(sell.quantity, buy.quantity);
-    // std::cout << "fill_quantity  = " << fill_quantity  << std::endl;
     results.emplace_back(Result::FillConfirm(sell.id, _symbol, fill_quantity, sell.price));
     results.emplace_back(Result::FillConfirm(buy.id, _symbol, fill_quantity, sell.price));
     sell.quantity -= fill_quantity;
