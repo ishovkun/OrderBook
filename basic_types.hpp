@@ -46,16 +46,16 @@ enum class ResultType
 std::ostream& operator<<(std::ostream& os, ResultType type) {
   switch (type) {
     case ResultType::FillConfirm:
-      os << "FillConfirm";
+      os << "F";
       break;
     case ResultType::CancelConfirm:
-      os << "CancelConfirm";
+      os << "X";
       break;
     case ResultType::BookEntry:
-      os << "Print";
+      os << "P";
       break;
     case ResultType::Error:
-      os << "Error";
+      os << "E";
       break;
   }
   return os;
@@ -66,41 +66,42 @@ struct Result
 {
   ResultType type;
   OrderID order_id;
+  Symbol symbol;
   Quantity quantity;
   Price price;
   std::string_view error_message;
 
-  static Result FillConfirm(OrderID id, Quantity q, Price price)
+  static Result FillConfirm(OrderID id,  Symbol const & s, Quantity q, Price price)
   {
-    return {ResultType::FillConfirm, id, q, price, ""};
+    return {ResultType::FillConfirm, id, s, q, price, ""};
   }
-  static Result CancelConfirm(OrderID id)
+  static Result CancelConfirm(OrderID id, Symbol const & s)
   {
-    return {ResultType::CancelConfirm, id, 0, Price(0), ""};
+    return {ResultType::CancelConfirm, id, s, 0, Price(0), ""};
   }
   static Result Error(OrderID id, std::string_view error_message)
   {
-    return {ResultType::Error, id, 0, Price(0), error_message};
+    return {ResultType::Error, id, Symbol(), 0, Price(0), error_message};
   }
-  static Result BookEntry(OrderID id, Quantity q, Price price)
+  static Result BookEntry(OrderID id, Symbol const &s, Quantity q, Price price)
   {
-    return {ResultType::BookEntry, id, q, price, ""};
+    return {ResultType::BookEntry, id, s, q, price, ""};
   }
 };
 
 std::ostream& operator<<(std::ostream& os, const Result& r) {
   os << r.type << " " << r.order_id;
   if (r.type == ResultType::FillConfirm) {
-    os << " " << r.quantity << " " << r.price;
+    os << " " << r.symbol << " " << r.quantity << " " << r.price;
   }
   else if (r.type == ResultType::CancelConfirm) {
-
+    // os << " " << r.symbol;
   }
   else if (r.type == ResultType::Error) {
     os << " " << r.error_message;
   }
   else if (r.type == ResultType::BookEntry) {
-    os << " " << r.quantity << " " << r.price;
+    os << " " << r.symbol << " " << r.quantity << " " << r.price;
   }
   return os;
 }

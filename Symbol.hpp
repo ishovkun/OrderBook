@@ -15,6 +15,7 @@ class Symbol {
   }
 
   Symbol(const char* str) {
+    std::fill(_data.begin(), _data.end(), 0);
     auto view = std::string_view(str);
     if (view.size() > 8) {
       throw std::runtime_error("Symbol too long");

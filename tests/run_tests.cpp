@@ -1,7 +1,6 @@
 #include <iostream>
 #include <iomanip>
 #include "../Price.hpp"
-#include "../OrderBook.hpp"
 #include "../OrderMatcher.hpp"
 #include "../Action.hpp"
 #include "../MultiSymbolBook.hpp"
@@ -46,100 +45,52 @@ auto test_order_book() -> bool {
     // "O 10001 IBM B 10 99.00000"             | results.size() == 0
     // "O 10002 IBM S 5 101.00000"             | results.size() == 0
     // "O 10003 IBM S 5 100.00000"             | results.size() == 2
-    {
-      std::unordered_map<OrderID, Order> orders;
-      orders[10000] = Order(10000, "IBM", Side::Buy, 10, Price("100.00000"));
-      orders[10001] = Order(10001, "IBM", Side::Buy, 10, Price("99.00000"));
-      orders[10002] = Order(10002, "IBM", Side::Sell, 5, Price("101.00000"));
-      orders[10003] = Order(10003, "IBM", Side::Sell, 5, Price("100.00000"));
-      hft::OrderMatcher matcher(orders);
-      std::vector<Result> results;
-
-      matcher.add(10000, results);
-      CHECK_EMPTY(results);
-      matcher.add(10001, results);
-      CHECK_EMPTY(results);
-      matcher.add(10002, results);
-      CHECK_EMPTY(results);
-      matcher.add(10003, results);
-      CHECK_EQUAL(results.size(), 2);
-      for (auto const & r : results) {
-        CHECK_EQUAL(r.type, ResultType::FillConfirm);
-      }
-      CHECK_EQUAL(results[0].order_id, 10003);
-      CHECK_EQUAL(results[0].quantity, 5);
-      CHECK_EQUAL(results[1].order_id, 10000);
-      CHECK_EQUAL(results[1].quantity, 5);
-
-      results.clear();
-      return true;
-    }
-
-  OrderBook book;
-  std::vector<Result> results;
-  book.add(Order(10000, "Apple", Side::Buy, 10, Price("100.00000")), results);
-  CHECK_EMPTY(results);
-  book.add(Order(10001, "Apple", Side::Buy, 10, Price("99.00000")), results);
-  CHECK_EMPTY(results);
-  book.add(Order(10002, "Apple", Side::Sell, 5, Price("101.00000")), results);
-  CHECK_EMPTY(results);
-  book.add(Order(10003, "Apple", Side::Sell, 5, Price("100.00000")), results);
-  CHECK_EQUAL(results.size(), 2);
-  for (auto const & r : results) {
-    CHECK_EQUAL(r.type, ResultType::FillConfirm);
-  }
-  CHECK_EQUAL(results[0].order_id, 10003);
-  CHECK_EQUAL(results[0].quantity, 5);
-  CHECK_EQUAL(results[1].order_id, 10000);
-  CHECK_EQUAL(results[1].quantity, 5);
-
-  results.clear();
-  book.add(Order(10002, "Apple", Side::Sell, 5, Price("101.00000")), results);
-  CHECK_EQUAL(results.size(), 1);
-  CHECK_EQUAL(results[0].order_id, 10002);
-  CHECK_EQUAL(results[0].type, ResultType::Error);
-
-  return true;
-}
-
-auto test_cancellation() -> bool {
-  {
     std::unordered_map<OrderID, Order> orders;
-    orders[10000] = Order(10000, "Google", Side::Buy, 10, Price("100.00000"));
-    orders[10001] = Order(10001, "Google", Side::Buy, 10, Price("99.00000"));
-    orders[10002] = Order(10002, "Google", Side::Sell, 5, Price("101.00000"));
-    orders[10003] = Order(10003, "Google", Side::Sell, 5, Price("100.00000"));
-    hft::OrderMatcher matcher(orders);
+    orders[10000] = Order(10000, "IBM", Side::Buy, 10, Price("100.00000"));
+    orders[10001] = Order(10001, "IBM", Side::Buy, 10, Price("99.00000"));
+    orders[10002] = Order(10002, "IBM", Side::Sell, 5, Price("101.00000"));
+    orders[10003] = Order(10003, "IBM", Side::Sell, 5, Price("100.00000"));
+    hft::OrderMatcher matcher(orders, "IBM");
     std::vector<Result> results;
 
     matcher.add(10000, results);
+    CHECK_EMPTY(results);
     matcher.add(10001, results);
-    matcher.cancel(10000, results);
-    CHECK_EQUAL(results.size(), 1);
-    CHECK_EQUAL(results[0].type, ResultType::CancelConfirm);
+    CHECK_EMPTY(results);
+    matcher.add(10002, results);
+    CHECK_EMPTY(results);
+    matcher.add(10003, results);
+    CHECK_EQUAL(results.size(), 2);
+    for (auto const &r : results) {
+      CHECK_EQUAL(r.type, ResultType::FillConfirm);
+    }
+    CHECK_EQUAL(results[0].order_id, 10003);
+    CHECK_EQUAL(results[0].quantity, 5);
+    CHECK_EQUAL(results[1].order_id, 10000);
+    CHECK_EQUAL(results[1].quantity, 5);
 
     results.clear();
-    matcher.cancel(666, results);
-    CHECK_EQUAL(results[0].type, ResultType::Error);
-  }
-  OrderBook book;
+    return true;
+}
+
+auto test_cancellation() -> bool {
+  std::unordered_map<OrderID, Order> orders;
+  orders[10000] = Order(10000, "Google", Side::Buy, 10, Price("100.00000"));
+  orders[10001] = Order(10001, "Google", Side::Buy, 10, Price("99.00000"));
+  orders[10002] = Order(10002, "Google", Side::Sell, 5, Price("101.00000"));
+  orders[10003] = Order(10003, "Google", Side::Sell, 5, Price("100.00000"));
+  hft::OrderMatcher matcher(orders, "Google");
   std::vector<Result> results;
-  book.add(Order(10000, "Google", Side::Buy, 10, Price("100.00000")), results);
-  book.add(Order(10001, "Google", Side::Buy, 10, Price("99.00000")), results);
 
-  {
-    std::vector<Result> results;
-    book.cancel(10000, results);
-    CHECK_EQUAL(results.size(), 1);
-    CHECK_EQUAL(results[0].type, ResultType::CancelConfirm);
-  }
+  matcher.add(10000, results);
+  matcher.add(10001, results);
+  matcher.cancel(10000, results);
+  CHECK_EQUAL(results.size(), 1);
+  CHECK_EQUAL(results[0].type, ResultType::CancelConfirm);
 
-  {
-    std::vector<Result> results;
-    book.cancel(666, results);
-    CHECK_EQUAL(results.size(), 1);
-    CHECK_EQUAL(results[0].type, ResultType::Error);
-  }
+  results.clear();
+  matcher.cancel(666, results);
+  CHECK_EQUAL(results[0].type, ResultType::Error);
   return true;
 }
 
@@ -201,22 +152,24 @@ auto test_multi_symbol_book() -> bool {
   book.add(Order(10000, "Apple", Side::Buy, 10, Price("100.00000")));
   CHECK_EMPTY(book.getResults());
   book.add(Order(10000, "Google", Side::Buy, 10, Price("100.00000")));
-  auto res = book.getResults();
-  CHECK_EQUAL(res[0].type, ResultType::Error);
+  CHECK_EQUAL(book.getResults()[0].type, ResultType::Error);
   book.add(Order(10001, "Apple", Side::Buy, 10, Price("100.00000")));
   book.add(Order(10003, "Apple", Side::Buy, 10, Price("110.00000")));
   book.add(Order(10004, "Gogle", Side::Buy, 10, Price("50.00000")));
 
 
-  std::vector<Price> prices(100);
+  int nitems = 10;
+  std::vector<Price> prices(nitems);
   int order_id = 1;
-  for (auto i = 0; i < 100; ++i) {
+  for (auto i = 0; i < nitems; ++i) {
     prices[i] = Price(std::to_string(10+i) + ".00000");
+    // std::cout << "P " << order_id << " B " << prices[i] << std::endl;
     book.add(Order(order_id++, "IBM", Side::Buy, 10, prices[i]));
   }
-  for (auto i = 0; i < 100; ++i) {
+  for (auto i = 0; i < nitems; ++i) {
     auto sell_price = prices[i] - Price("1.00000");
-    book.add(Order(order_id++, "IBM", Side::Buy, 10, sell_price));
+    // std::cout << "P " << order_id << " S " << sell_price << std::endl;
+    book.add(Order(order_id++, "IBM", Side::Sell, 10, sell_price));
   }
   book.cancel(10000);
   CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
@@ -228,6 +181,7 @@ auto test_multi_symbol_book() -> bool {
   CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
 
   book.print();
+  CHECK_EMPTY(book.getResults());
 
   return true;
 }

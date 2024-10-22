@@ -1,7 +1,6 @@
 #pragma once
 #include <unordered_map>
 #include "basic_types.hpp"
-#include "OrderBook.hpp"
 #include "OrderMatcher.hpp"
 
 namespace hft {
@@ -23,13 +22,13 @@ class MultiSymbolBook {
     }
     _orders[order.id] = order;
     if (!_matchers.count(order.symbol)) {
-      _matchers.emplace(order.symbol, OrderMatcher(_orders));
+      _matchers.emplace(order.symbol, OrderMatcher(_orders, order.symbol));
     }
     _matchers.find(order.symbol)->second.add(order.id, _results);
 
     for (auto const & result : _results) {
-      if (result.type == ResultType::FillConfirm && _orders[order.id].quantity == 0) {
-        _orders.erase(order.id);
+      if (result.type == ResultType::FillConfirm && _orders[result.order_id].quantity == 0) {
+        _orders.erase(result.order_id);
       }
     }
   }
@@ -51,6 +50,7 @@ class MultiSymbolBook {
   }
 
   void print() {
+    _results.clear();
     for (auto it = _matchers.begin(); it != _matchers.end(); ++it) {
       it->second.print(_results);
     }

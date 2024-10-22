@@ -13,10 +13,11 @@ class OrderMatcher {
   std::unordered_map<OrderID, Order> & _orders;
   std::map<Price,std::vector<OrderID>> _buy;
   std::map<Price,std::vector<OrderID>> _sell;
+  Symbol _symbol;
 
  public:
-  OrderMatcher(std::unordered_map<OrderID, Order> & orders)
-      : _orders(orders)
+  OrderMatcher(std::unordered_map<OrderID, Order> & orders, Symbol symbol)
+      : _orders(orders), _symbol(symbol)
   {}
 
   void add(OrderID iorder , std::vector<Result> & results);
@@ -66,7 +67,7 @@ void OrderMatcher::cancel(OrderID id, std::vector<Result> & results)
       _sell.erase(order.price);
     }
   }
-  results.emplace_back(Result::CancelConfirm(id));
+  results.emplace_back(Result::CancelConfirm(id, _symbol));
 }
 
 
@@ -81,8 +82,9 @@ auto OrderMatcher::tryFill_(std::vector<Result> & results) -> void
     auto & buy = _orders[vector_buys.front()];
 
     Quantity fill_quantity = std::min(sell.quantity, buy.quantity);
-    results.emplace_back(Result::FillConfirm(sell.id, fill_quantity, sell.price));
-    results.emplace_back(Result::FillConfirm(buy.id, fill_quantity, sell.price));
+    // std::cout << "fill_quantity  = " << fill_quantity  << std::endl;
+    results.emplace_back(Result::FillConfirm(sell.id, _symbol, fill_quantity, sell.price));
+    results.emplace_back(Result::FillConfirm(buy.id, _symbol, fill_quantity, sell.price));
     sell.quantity -= fill_quantity;
     buy.quantity -= fill_quantity;
 
@@ -108,7 +110,7 @@ void OrderMatcher::print(std::vector<Result> & results) const
     for (auto const & it : container) {
       for (auto order_id : it.second) {
         auto & order = _orders[order_id];
-        results.emplace_back(Result::BookEntry(order_id, order.quantity, order.price) );
+        results.emplace_back(Result::BookEntry(order_id, _symbol, order.quantity, order.price) );
       }
     }
   }
