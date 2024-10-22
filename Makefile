@@ -8,4 +8,4 @@ test: ./*.cpp ./*.hpp Makefile
 	./run_tests
 
 main: ./*.cpp ./*.hpp Makefile
-	$(COMPILER) $(FLAGS) app.cpp -o main
+	$(COMPILER) $(FLAGS) app.cpp -o app
