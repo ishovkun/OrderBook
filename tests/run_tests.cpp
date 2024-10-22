@@ -2,7 +2,9 @@
 #include <iomanip>
 #include "../Price.hpp"
 #include "../OrderBook.hpp"
+#include "../OrderMatcher.hpp"
 #include "../Action.hpp"
+#include "../MultiSymbolBook.hpp"
 
 using namespace hft;
 
@@ -44,6 +46,35 @@ auto test_order_book() -> bool {
     // "O 10001 IBM B 10 99.00000"             | results.size() == 0
     // "O 10002 IBM S 5 101.00000"             | results.size() == 0
     // "O 10003 IBM S 5 100.00000"             | results.size() == 2
+    {
+      std::unordered_map<OrderID, SymbolOrder> orders;
+      orders[10000] = SymbolOrder(10000, Side::Buy, 10, Price("100.00000"));
+      orders[10001] = SymbolOrder(10001, Side::Buy, 10, Price("99.00000"));
+      orders[10002] = SymbolOrder(10002, Side::Sell, 5, Price("101.00000"));
+      orders[10003] = SymbolOrder(10003, Side::Sell, 5, Price("100.00000"));
+      hft::OrderMatcher matcher(orders);
+      std::vector<Result> results;
+
+      matcher.add(10000, results);
+      CHECK_EMPTY(results);
+      matcher.add(10001, results);
+      CHECK_EMPTY(results);
+      matcher.add(10002, results);
+      CHECK_EMPTY(results);
+      matcher.add(10003, results);
+      CHECK_EQUAL(results.size(), 2);
+      for (auto const & r : results) {
+        CHECK_EQUAL(r.type, ResultType::FillConfirm);
+      }
+      CHECK_EQUAL(results[0].order_id, 10003);
+      CHECK_EQUAL(results[0].quantity, 5);
+      CHECK_EQUAL(results[1].order_id, 10000);
+      CHECK_EQUAL(results[1].quantity, 5);
+
+      results.clear();
+      return true;
+    }
+
   OrderBook book;
   std::vector<Result> results;
   book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
@@ -72,6 +103,25 @@ auto test_order_book() -> bool {
 }
 
 auto test_cancellation() -> bool {
+  {
+    std::unordered_map<OrderID, SymbolOrder> orders;
+    orders[10000] = SymbolOrder(10000, Side::Buy, 10, Price("100.00000"));
+    orders[10001] = SymbolOrder(10001, Side::Buy, 10, Price("99.00000"));
+    orders[10002] = SymbolOrder(10002, Side::Sell, 5, Price("101.00000"));
+    orders[10003] = SymbolOrder(10003, Side::Sell, 5, Price("100.00000"));
+    hft::OrderMatcher matcher(orders);
+    std::vector<Result> results;
+
+    matcher.add(10000, results);
+    matcher.add(10001, results);
+    matcher.cancel(10000, results);
+    CHECK_EQUAL(results.size(), 1);
+    CHECK_EQUAL(results[0].type, ResultType::CancelConfirm);
+
+    results.clear();
+    matcher.cancel(666, results);
+    CHECK_EQUAL(results[0].type, ResultType::Error);
+  }
   OrderBook book;
   std::vector<Result> results;
   book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
@@ -101,7 +151,7 @@ auto test_action() -> bool {
       CHECK_EQUAL(action.type, ActionType::Place);
       CHECK_EQUAL(action.order.payload.id, 10000);
       CHECK_EQUAL(action.order.payload.quantity, 10);
-      CHECK_EQUAL(std::string(action.order.symbol), "IBM");
+      CHECK_EQUAL(action.order.symbol, "IBM");
     }
     catch (std::invalid_argument const & e) {
       std::cout << "Should not have thrown: " << e.what() << std::endl;
@@ -144,6 +194,13 @@ auto test_action() -> bool {
     }
   }
   return true;
+}
+
+auto test_multi_symbol_book() -> bool {
+  MultiSymbolBook book;
+  SymbolOrder order(10000, Side::Buy, 10, Price("100.00000"));
+  book.add(Order("IMB", order));
+  return false;
 }
 
 template <typename F>
