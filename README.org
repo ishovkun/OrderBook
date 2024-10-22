@@ -63,8 +63,8 @@ RESULT OID [SYMBOL [SIDE] (FILL_QTY | OPEN_QTY) (FILL_PX | ORD_PX)]
     + Orders for different symbols should not cross (i.e. the book must support multiple symbols)
 
 * Example session:
-    | INPUT                                  | OUTPUT |
-    ============================================================================
+    | INPUT                        | OUTPUT                                     |
+    | ----                         | -----                                      |
     | "O 10000 IBM B 10 100.00000" | results.size() == 0                        |
     | "O 10001 IBM B 10 99.00000"  | results.size() == 0                        |
     | "O 10002 IBM S 5 101.00000"  | results.size() == 0                        |
