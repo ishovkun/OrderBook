@@ -7,5 +7,5 @@ tests: tests/* Makefile
 	$(COMPILER) $(FLAGS) tests/run_tests.cpp -o run_tests
 	./run_tests
 
-main: simple_cross.cpp ./*.cpp ./*.hpp Makefile
-	$(COMPILER) $(FLAGS) simple_cross.cpp -o main
+main: ./*.cpp ./*.hpp Makefile
+	$(COMPILER) $(FLAGS) app.cpp -o main
