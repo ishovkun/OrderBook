@@ -14,9 +14,24 @@ class Symbol {
     std::fill(_data.begin(), _data.end(), 0);
   }
 
+  Symbol(const char* str) {
+    auto view = std::string_view(str);
+    if (view.size() > 8) {
+      throw std::runtime_error("Symbol too long");
+    }
+    std::copy(view.begin(), view.end(), _data.begin());
+    _view = std::string_view(_data.data());
+  }
+
   auto operator==(const char* str) -> bool {
     return _view == std::string_view(str);
   }
+  auto operator==(const Symbol & other) const {
+    return _data == other._data;
+  }
+  std::string_view view() const { return _view; }
+
+ private:
   friend std::istream& operator>>(std::istream& os, Symbol& s);
   friend std::ostream& operator<<(std::ostream& os, const Symbol& s);
 };
@@ -40,12 +55,12 @@ std::istream& operator>>(std::istream& is, Symbol& s) {
 
 }  // end namespace hft
 
-// namespace std {
-//   template <> struct hash<hft::Symbol>
-//   {
-//     size_t operator()(const hft::Symbol & x) const
-//     {
-//       return std::hash<std::string_view>{}(std::string_view(x));
-//     }
-//   };
-// }
+namespace std {
+  template <> struct hash<hft::Symbol>
+  {
+    size_t operator()(const hft::Symbol & x) const
+    {
+      return std::hash<std::string_view>{}(x.view());
+    }
+  };
+}

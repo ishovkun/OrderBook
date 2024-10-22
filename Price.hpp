@@ -48,6 +48,7 @@ class Price {
   }
 
   friend auto operator+(Price const & lhs, Price const & rhs) -> Price;
+  friend auto operator-(Price const & lhs, Price const & rhs) -> Price;
   friend std::ostream& operator<<(std::ostream& os, const Price& price);
   friend std::istream& operator>>(std::istream& os, Price& price);
 
@@ -61,6 +62,12 @@ private:
 
 auto operator+(Price const & lhs, Price const & rhs) -> Price {
   auto ans = Price(lhs._val + rhs._val);
+  ans.checkOverflow_(ans._val);
+  return ans;
+}
+
+auto operator-(Price const & lhs, Price const & rhs) -> Price {
+  auto ans = Price(lhs._val - rhs._val);
   ans.checkOverflow_(ans._val);
   return ans;
 }

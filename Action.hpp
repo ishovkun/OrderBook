@@ -36,31 +36,28 @@ Action::Action(std::string const & s)
 
   if (type_str == "O") {
     type = ActionType::Place;
-    ss >> order.payload.id;
-    ss >> symbol_str;
-    if (symbol_str.size() > sizeof(Symbol)) {
-      throw std::invalid_argument("Invalid symbol");
-    }
-    std::copy(symbol_str.begin(), symbol_str.end(), order.symbol);
+    ss >> order.id;
+    ss >> order.symbol;
     ss >> side_str;
+    // std::cout << "order.symbol = '" << order.symbol <<"'" << std::endl;
     if (side_str.size() != 1) {
       throw std::invalid_argument("Invalid side");
     }
     if (side_str[0] == 'B') {
-      order.payload.side = Side::Buy;
+      order.side = Side::Buy;
     }
     else if (side_str[0] == 'S') {
-      order.payload.side = Side::Sell;
+      order.side = Side::Sell;
     }
     else {
       throw std::invalid_argument("Invalid side");
     }
-    ss >> order.payload.quantity;
-    ss >> order.payload.price;
+    ss >> order.quantity;
+    ss >> order.price;
   }
   else if (type_str == "X") {
     type = ActionType::Cancel;
-    ss >> order.payload.id;
+    ss >> order.id;
   }
   else if (type_str == "P") {
     type = ActionType::Print;

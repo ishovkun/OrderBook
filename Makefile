@@ -7,5 +7,5 @@ tests: tests/*
 	$(COMPILER) $(FLAGS) tests/run_tests.cpp -o run_tests
 	./run_tests
 
-main: simple_cross.cpp
+main: simple_cross.cpp ./*.cpp ./*.hpp
 	$(COMPILER) $(FLAGS) simple_cross.cpp -o main

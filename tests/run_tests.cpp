@@ -47,11 +47,11 @@ auto test_order_book() -> bool {
     // "O 10002 IBM S 5 101.00000"             | results.size() == 0
     // "O 10003 IBM S 5 100.00000"             | results.size() == 2
     {
-      std::unordered_map<OrderID, SymbolOrder> orders;
-      orders[10000] = SymbolOrder(10000, Side::Buy, 10, Price("100.00000"));
-      orders[10001] = SymbolOrder(10001, Side::Buy, 10, Price("99.00000"));
-      orders[10002] = SymbolOrder(10002, Side::Sell, 5, Price("101.00000"));
-      orders[10003] = SymbolOrder(10003, Side::Sell, 5, Price("100.00000"));
+      std::unordered_map<OrderID, Order> orders;
+      orders[10000] = Order(10000, "IBM", Side::Buy, 10, Price("100.00000"));
+      orders[10001] = Order(10001, "IBM", Side::Buy, 10, Price("99.00000"));
+      orders[10002] = Order(10002, "IBM", Side::Sell, 5, Price("101.00000"));
+      orders[10003] = Order(10003, "IBM", Side::Sell, 5, Price("100.00000"));
       hft::OrderMatcher matcher(orders);
       std::vector<Result> results;
 
@@ -77,13 +77,13 @@ auto test_order_book() -> bool {
 
   OrderBook book;
   std::vector<Result> results;
-  book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
+  book.add(Order(10000, "Apple", Side::Buy, 10, Price("100.00000")), results);
   CHECK_EMPTY(results);
-  book.add(SymbolOrder(10001, Side::Buy, 10, Price("99.00000")), results);
+  book.add(Order(10001, "Apple", Side::Buy, 10, Price("99.00000")), results);
   CHECK_EMPTY(results);
-  book.add(SymbolOrder(10002, Side::Sell, 5, Price("101.00000")), results);
+  book.add(Order(10002, "Apple", Side::Sell, 5, Price("101.00000")), results);
   CHECK_EMPTY(results);
-  book.add(SymbolOrder(10003, Side::Sell, 5, Price("100.00000")), results);
+  book.add(Order(10003, "Apple", Side::Sell, 5, Price("100.00000")), results);
   CHECK_EQUAL(results.size(), 2);
   for (auto const & r : results) {
     CHECK_EQUAL(r.type, ResultType::FillConfirm);
@@ -94,7 +94,7 @@ auto test_order_book() -> bool {
   CHECK_EQUAL(results[1].quantity, 5);
 
   results.clear();
-  book.add(SymbolOrder(10002, Side::Sell, 5, Price("101.00000")), results);
+  book.add(Order(10002, "Apple", Side::Sell, 5, Price("101.00000")), results);
   CHECK_EQUAL(results.size(), 1);
   CHECK_EQUAL(results[0].order_id, 10002);
   CHECK_EQUAL(results[0].type, ResultType::Error);
@@ -104,11 +104,11 @@ auto test_order_book() -> bool {
 
 auto test_cancellation() -> bool {
   {
-    std::unordered_map<OrderID, SymbolOrder> orders;
-    orders[10000] = SymbolOrder(10000, Side::Buy, 10, Price("100.00000"));
-    orders[10001] = SymbolOrder(10001, Side::Buy, 10, Price("99.00000"));
-    orders[10002] = SymbolOrder(10002, Side::Sell, 5, Price("101.00000"));
-    orders[10003] = SymbolOrder(10003, Side::Sell, 5, Price("100.00000"));
+    std::unordered_map<OrderID, Order> orders;
+    orders[10000] = Order(10000, "Google", Side::Buy, 10, Price("100.00000"));
+    orders[10001] = Order(10001, "Google", Side::Buy, 10, Price("99.00000"));
+    orders[10002] = Order(10002, "Google", Side::Sell, 5, Price("101.00000"));
+    orders[10003] = Order(10003, "Google", Side::Sell, 5, Price("100.00000"));
     hft::OrderMatcher matcher(orders);
     std::vector<Result> results;
 
@@ -124,8 +124,8 @@ auto test_cancellation() -> bool {
   }
   OrderBook book;
   std::vector<Result> results;
-  book.add(SymbolOrder(10000, Side::Buy, 10, Price("100.00000")), results);
-  book.add(SymbolOrder(10001, Side::Buy, 10, Price("99.00000")), results);
+  book.add(Order(10000, "Google", Side::Buy, 10, Price("100.00000")), results);
+  book.add(Order(10001, "Google", Side::Buy, 10, Price("99.00000")), results);
 
   {
     std::vector<Result> results;
@@ -149,8 +149,8 @@ auto test_action() -> bool {
       std::string action_str = "O 10000 IBM B 10 100.00000 ";
       Action action(action_str);
       CHECK_EQUAL(action.type, ActionType::Place);
-      CHECK_EQUAL(action.order.payload.id, 10000);
-      CHECK_EQUAL(action.order.payload.quantity, 10);
+      CHECK_EQUAL(action.order.id, 10000);
+      CHECK_EQUAL(action.order.quantity, 10);
       CHECK_EQUAL(action.order.symbol, "IBM");
     }
     catch (std::invalid_argument const & e) {
@@ -198,9 +198,38 @@ auto test_action() -> bool {
 
 auto test_multi_symbol_book() -> bool {
   MultiSymbolBook book;
-  SymbolOrder order(10000, Side::Buy, 10, Price("100.00000"));
-  book.add(Order("IMB", order));
-  return false;
+  book.add(Order(10000, "Apple", Side::Buy, 10, Price("100.00000")));
+  CHECK_EMPTY(book.getResults());
+  book.add(Order(10000, "Google", Side::Buy, 10, Price("100.00000")));
+  auto res = book.getResults();
+  CHECK_EQUAL(res[0].type, ResultType::Error);
+  book.add(Order(10001, "Apple", Side::Buy, 10, Price("100.00000")));
+  book.add(Order(10003, "Apple", Side::Buy, 10, Price("110.00000")));
+  book.add(Order(10004, "Gogle", Side::Buy, 10, Price("50.00000")));
+
+
+  std::vector<Price> prices(100);
+  int order_id = 1;
+  for (auto i = 0; i < 100; ++i) {
+    prices[i] = Price(std::to_string(10+i) + ".00000");
+    book.add(Order(order_id++, "IBM", Side::Buy, 10, prices[i]));
+  }
+  for (auto i = 0; i < 100; ++i) {
+    auto sell_price = prices[i] - Price("1.00000");
+    book.add(Order(order_id++, "IBM", Side::Buy, 10, sell_price));
+  }
+  book.cancel(10000);
+  CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
+  book.cancel(10001);
+  CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
+  book.cancel(10003);
+  CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
+  book.cancel(10004);
+  CHECK_EQUAL(book.getResults()[0].type, ResultType::CancelConfirm);
+
+  book.print();
+
+  return true;
 }
 
 template <typename F>
@@ -219,6 +248,7 @@ auto main(int , char *[]) -> int {
   run_test(test_order_book, "Symbol book");
   run_test(test_cancellation, "Symbol book cancel");
   run_test(test_action, "Action");
+  run_test(test_multi_symbol_book, "Multi symbol book");
 
   // std::cout << std::numeric_limits<uint64_t>::max() << std::endl;
   // std::cout << std::numeric_limits<int64_t>::max() << std::endl;

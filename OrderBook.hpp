@@ -5,18 +5,18 @@
 namespace hft {
 
 class OrderBook {
-  std::map<Price,std::vector<SymbolOrder>> _buy;
-  std::map<Price,std::vector<SymbolOrder>> _sell;
+  std::map<Price,std::vector<Order>> _buy;
+  std::map<Price,std::vector<Order>> _sell;
 
  public:
   OrderBook() = default;
 
-  int add(SymbolOrder const & order, std::vector<Result> & results);
+  int add(Order const & order, std::vector<Result> & results);
   int cancel(OrderID id, std::vector<Result> & results);
   int print(std::vector<Result> & results) const;
+  bool contains(OrderID id) const;
 
  private:
-  bool contains(OrderID id) const;
   int tryFill_(std::vector<Result> & results);
 };
 
@@ -34,7 +34,7 @@ bool OrderBook::contains(OrderID id) const
   return false;
 }
 
-int OrderBook::add(SymbolOrder const & order, std::vector<Result> & results) {
+int OrderBook::add(Order const & order, std::vector<Result> & results) {
   if (contains(order.id)) {
     results.emplace_back(Result::Error(order.id, "Duplicate order id"));
   }

@@ -16,35 +16,30 @@ std::ostream& operator<<(std::ostream& os, const Side& s) {
   return os;
 }
 
-struct SymbolOrder
+struct Order
 {
   OrderID id;
+  Symbol symbol;
   Side side;
   Quantity quantity;
   Price price;
 
-  SymbolOrder(OrderID id, Side side, Quantity quantity, Price price)
-      : id(id), side(side), quantity(quantity), price(price)
+  Order(OrderID id, Symbol symbol, Side side, Quantity quantity, Price price)
+      : id(id), symbol(symbol), side(side), quantity(quantity), price(price)
   {}
-  SymbolOrder() = default;
+  Order() = default;
 };
 
-std::ostream& operator<<(std::ostream& os, const SymbolOrder& o) {
+std::ostream& operator<<(std::ostream& os, const Order& o) {
   os << o.id << " " << o.side << " " << o.quantity << " " << o.price;
   return os;
 }
-
-struct Order
-{
-  Symbol symbol;
-  SymbolOrder payload;
-};
 
 enum class ResultType
 {
   FillConfirm,
   CancelConfirm,
-  Print,
+  BookEntry,
   Error,
 };
 
@@ -56,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, ResultType type) {
     case ResultType::CancelConfirm:
       os << "CancelConfirm";
       break;
-    case ResultType::Print:
+    case ResultType::BookEntry:
       os << "Print";
       break;
     case ResultType::Error:
@@ -73,7 +68,7 @@ struct Result
   OrderID order_id;
   Quantity quantity;
   Price price;
-  std::string error_message;
+  std::string_view error_message;
 
   static Result FillConfirm(OrderID id, Quantity q, Price price)
   {
@@ -83,10 +78,31 @@ struct Result
   {
     return {ResultType::CancelConfirm, id, 0, Price(0), ""};
   }
-  static Result Error(OrderID id, std::string const & error_message)
+  static Result Error(OrderID id, std::string_view error_message)
   {
     return {ResultType::Error, id, 0, Price(0), error_message};
   }
+  static Result BookEntry(OrderID id, Quantity q, Price price)
+  {
+    return {ResultType::BookEntry, id, q, price, ""};
+  }
 };
+
+std::ostream& operator<<(std::ostream& os, const Result& r) {
+  os << r.type << " " << r.order_id;
+  if (r.type == ResultType::FillConfirm) {
+    os << " " << r.quantity << " " << r.price;
+  }
+  else if (r.type == ResultType::CancelConfirm) {
+
+  }
+  else if (r.type == ResultType::Error) {
+    os << " " << r.error_message;
+  }
+  else if (r.type == ResultType::BookEntry) {
+    os << " " << r.quantity << " " << r.price;
+  }
+  return os;
+}
 
 }  // end namespace hft

@@ -5,17 +5,17 @@
 
 namespace hft {
 
-using hft::SymbolOrder;
+using hft::Order;
 using hft::Result;
 
 class OrderMatcher {
 
-  std::unordered_map<OrderID, SymbolOrder> & _orders;
+  std::unordered_map<OrderID, Order> & _orders;
   std::map<Price,std::vector<OrderID>> _buy;
   std::map<Price,std::vector<OrderID>> _sell;
 
  public:
-  OrderMatcher(std::unordered_map<OrderID, SymbolOrder> & orders)
+  OrderMatcher(std::unordered_map<OrderID, Order> & orders)
       : _orders(orders)
   {}
 
@@ -101,5 +101,18 @@ auto OrderMatcher::tryFill_(std::vector<Result> & results) -> void
   }
   return;
 }
+
+void OrderMatcher::print(std::vector<Result> & results) const
+{
+  for (auto const& container : {_sell, _buy}) {
+    for (auto const & it : container) {
+      for (auto order_id : it.second) {
+        auto & order = _orders[order_id];
+        results.emplace_back(Result::BookEntry(order_id, order.quantity, order.price) );
+      }
+    }
+  }
+}
+
 
 }
