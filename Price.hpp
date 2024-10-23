@@ -48,6 +48,10 @@ class Price {
     return !(*this == other);
   }
 
+  auto operator>(Price const & other) const -> bool  {
+    return _val > other._val;
+  }
+
   friend auto operator+(Price const & lhs, Price const & rhs) -> Price;
   friend auto operator-(Price const & lhs, Price const & rhs) -> Price;
   friend std::ostream& operator<<(std::ostream& os, const Price& price);
